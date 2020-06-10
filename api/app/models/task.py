@@ -1,4 +1,6 @@
 from . import db
+
+from sqlalchemy import desc, asc 
 # NUESTRO MODELO
 # 'BASE DE DATOS'
 from sqlalchemy.event import listen
@@ -9,8 +11,6 @@ en este caso queremos insertar regisgros cuando la tabla task se cree
 '''
 
 class Task(db.Model):
-
-
     # NOMBRE DE LA TABLA
     __tablename__ = 'tasks'
 
@@ -31,6 +31,13 @@ class Task(db.Model):
     def new(cls, title, description, deadline):
         return Task(title = title, description = description, deadline = deadline)
     
+    #AQUI ESTAR ORDENADOR LAS PAGINAS  ascendente o descendente
+    @classmethod
+    def get_by_page(cls, order, page, per_page=10):  
+        sort = desc(Task.id) if order == 'desc' else asc(Task.id)      #   AQUI PER_PAGE ASIGNA EL NUMERO DE DATOS POR PAGINA
+        return Task.query.order_by(sort).paginate(page, per_page).items
+        #page is current page
+        #per_page is separete page per page...
     def save(self):
         #operacion para persistir datos
         try:
@@ -40,17 +47,25 @@ class Task(db.Model):
         except:
             return False 
 
+    def delete(self):
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return True
+        except:
+            return False
+
     def __str__(self):
         return self.title
 
-    def serialize(self):
+"""    def serialize(self):
         #AQUI SEERIALIZAMOS EL OBJETO JSON
         return {
             'id':self.id,
             'title':self.title,
             'description':self.description,
             'deadline':self.deadline
-        }#estos datos seran expuestos al cliente
+        }#estos datos seran expuestos al cliente"""
 
 
 #este es el callback 
